@@ -48,25 +48,32 @@ def main():
         service_costs = cost.get_cost_by_service_for_timeframes(aws_config, timeframes)
         service_table = PrettyTable()
         service_table.field_names = ["Service", "Last month", "This month", "Last 7 days", "Yesterday"]
-        
-        # Color the "Service" header row in red
-        service_table.header_color = Fore.RED
-        
+
+        # Ensure 'Tax' is the first row
+        if 'Tax' in service_costs:
+            tax_costs = service_costs.pop('Tax')
+            service_table.add_row([
+                Fore.BLUE + "Tax" + Style.RESET_ALL,
+                f"${tax_costs.get('Last month', 0.00):.2f}",
+                f"${tax_costs.get('This month', 0.00):.2f}",
+                f"${tax_costs.get('Last 7 days', 0.00):.2f}",
+                f"${tax_costs.get('Yesterday', 0.00):.2f}"
+            ])
+
         for service, costs in service_costs.items():
             last_month_cost = costs.get('Last month', 0.00)
             this_month_cost = costs.get('This month', 0.00)
             last_7_days_cost = costs.get('Last 7 days', 0.00)
             yesterday_cost = costs.get('Yesterday', 0.00)
-    
-            # Color the service names in blue
-            service_name_colored = Fore.BLUE + service
+            
             service_table.add_row([
-                service_name_colored,
+                Fore.BLUE + service + Style.RESET_ALL,
                 f"${last_month_cost:.2f}",
                 f"${this_month_cost:.2f}",
                 f"${last_7_days_cost:.2f}",
                 f"${yesterday_cost:.2f}"
             ])
+
         print(service_table)
 
 if __name__ == "__main__":
