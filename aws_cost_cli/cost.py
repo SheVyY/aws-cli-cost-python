@@ -1,6 +1,31 @@
 import boto3
 import datetime
 
+def is_cost_from_entire_organization(aws_config):
+    cost_explorer = boto3.client('ce', **aws_config)
+    
+    # Use a sample date range to check the linkedAccount dimension
+    end_date = datetime.date.today()
+    start_date = end_date - datetime.timedelta(days=1)
+    
+    pricing_data = cost_explorer.get_cost_and_usage(
+        TimePeriod={
+            'Start': start_date.strftime('%Y-%m-%d'),
+            'End': end_date.strftime('%Y-%m-%d')
+        },
+        Granularity='DAILY',
+        Metrics=['UnblendedCost'],
+        GroupBy=[
+            {
+                'Type': 'DIMENSION',
+                'Key': 'LINKED_ACCOUNT'
+            }
+        ]
+    )
+    
+    # If there are multiple linked accounts, it means the costs are from the entire organization
+    return len(pricing_data['ResultsByTime'][0]['Groups']) > 1
+
 def get_yesterday():
     today = datetime.date.today()
     yesterday = today - datetime.timedelta(days=1)
