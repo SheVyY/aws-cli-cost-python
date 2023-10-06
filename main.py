@@ -3,6 +3,7 @@ import argparse
 from aws_cost_cli import config, account, cost
 from colorama import init, Fore, Back, Style
 from prettytable import PrettyTable
+from aws_cost_cli import slack_notifier
 
 def main():
     # Initialize colorama
@@ -14,6 +15,8 @@ def main():
     parser = argparse.ArgumentParser(description="AWS Cost CLI in Python")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     parser.add_argument("--summary", action="store_true", help="Display only the total cost summary")
+    parser.add_argument("-S", "--slack-token", help="Slack token for the slack message")
+    parser.add_argument("-C", "--slack-channel", help="Slack channel to post the message to")
     args = parser.parse_args()
 
     # Fetch the AWS account alias
@@ -75,6 +78,12 @@ def main():
             ])
 
         print(service_table)
+    
+    # Check if Slack arguments are provided
+    if args.slack_token and args.slack_channel:
+        # Convert the PrettyTable object to a string for the Slack message
+        cost_report_message = str(summary_table) + "\n" + str(service_table)
+        slack_notifier.send_slack_notification(args.slack_token, args.slack_channel, cost_report_message)
 
 if __name__ == "__main__":
     main()
